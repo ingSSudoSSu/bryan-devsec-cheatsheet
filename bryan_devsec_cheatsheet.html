@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bryan_devsec · Hacking Cheatsheet</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --bg2: #13161e;
+    --bg3: #1a1d27;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e2e4ec;
+    --muted: #6b7080;
+    --dim: #3a3d4a;
+    --green: #3dd68c;
+    --green-dim: rgba(61,214,140,0.12);
+    --blue: #4f9eff;
+    --blue-dim: rgba(79,158,255,0.12);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --red: #ff5c5c;
+    --red-dim: rgba(255,92,92,0.12);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,0.12);
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Space Grotesk', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* Grid bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; position: relative; z-index: 1; }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 16px; }
+
+  .avatar {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .header-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .header-sub {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--green);
+    margin-top: 2px;
+  }
+
+  .header-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .badge {
+    font-size: 11px;
+    font-family: var(--mono);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid;
+    letter-spacing: 0.3px;
+  }
+  .badge-green { background: var(--green-dim); color: var(--green); border-color: rgba(61,214,140,0.25); }
+  .badge-blue  { background: var(--blue-dim);  color: var(--blue);  border-color: rgba(79,158,255,0.25); }
+  .badge-muted { background: transparent; color: var(--muted); border-color: var(--border2); }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+    letter-spacing: 0.2px;
+  }
+  .filter-btn:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+  .filter-btn.active { color: var(--text); background: var(--bg3); border-color: var(--border2); }
+  .filter-btn.active.f-whatweb { color: var(--blue); border-color: rgba(79,158,255,0.35); background: var(--blue-dim); }
+  .filter-btn.active.f-ffuf    { color: var(--amber); border-color: rgba(245,166,35,0.35); background: var(--amber-dim); }
+  .filter-btn.active.f-nuclei  { color: var(--red); border-color: rgba(255,92,92,0.35); background: var(--red-dim); }
+  .filter-btn.active.f-nmap    { color: var(--green); border-color: rgba(61,214,140,0.35); background: var(--green-dim); }
+  .filter-btn.active.f-headers { color: var(--purple); border-color: rgba(167,139,250,0.35); background: var(--purple-dim); }
+
+  /* Section */
+  .section {
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg2);
+    animation: fadeIn .25s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: translateY(0); } }
+
+  .section-bar { height: 3px; }
+  .bar-whatweb { background: var(--blue); }
+  .bar-ffuf    { background: var(--amber); }
+  .bar-nuclei  { background: var(--red); }
+  .bar-nmap    { background: var(--green); }
+  .bar-headers { background: var(--purple); }
+
+  .section-header {
+    padding: 14px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tool-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: auto;
+    letter-spacing: 0.5px;
+  }
+  .tl-whatweb { background: var(--blue-dim); color: var(--blue); }
+  .tl-ffuf    { background: var(--amber-dim); color: var(--amber); }
+  .tl-nuclei  { background: var(--red-dim); color: var(--red); }
+  .tl-nmap    { background: var(--green-dim); color: var(--green); }
+  .tl-headers { background: var(--purple-dim); color: var(--purple); }
+
+  /* Command row */
+  .cmd-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 14px;
+    align-items: start;
+    padding: 10px 18px;
+    border-top: 1px solid var(--border);
+    transition: background .15s;
+  }
+  .cmd-row:hover { background: var(--bg3); }
+
+  .cmd {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--green);
+    white-space: pre;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .desc {
+    font-size: 13px;
+    color: var(--muted);
+    padding-top: 1px;
+  }
+
+  .copy-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s;
+    align-self: start;
+  }
+  .copy-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); background: var(--bg3); }
+  .copy-btn.copied { color: var(--green); border-color: rgba(61,214,140,0.3); }
+
+  /* Flow section */
+  .flow-box {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 20px 0 0;
+  }
+  .flow-title { font-size: 11px; font-family: var(--mono); color: var(--muted); margin-bottom: 12px; letter-spacing: 0.5px; }
+  .flow-steps { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .flow-step {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    color: var(--text);
+  }
+  .flow-arrow { color: var(--dim); font-size: 14px; }
+
+  /* Footer */
+  footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .footer-left { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .footer-right { font-size: 12px; color: var(--dim); }
+
+  @media (max-width: 640px) {
+    .cmd-row { grid-template-columns: 1fr; }
+    header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="header-left">
+      <div class="avatar">🛡️</div>
+      <div>
+        <div class="header-name">RUIZ NIEVES, BRYAN JOEL</div>
+        <div class="header-sub">bryan_devsec</div>
+      </div>
+    </div>
+    <div class="header-badges">
+      <span class="badge badge-green">✔ HackerOne</span>
+      <span class="badge badge-blue">Bug Bounty</span>
+      <span class="badge badge-muted">abril 2026</span>
+    </div>
+  </header>
+
+  <div class="filter-bar" id="filters">
+    <button class="filter-btn active f-all" onclick="filter('all',this)">Todo</button>
+    <button class="filter-btn f-nmap"    onclick="filter('nmap',this)">nmap</button>
+    <button class="filter-btn f-whatweb" onclick="filter('whatweb',this)">WhatWeb</button>
+    <button class="filter-btn f-ffuf"    onclick="filter('ffuf',this)">ffuf</button>
+    <button class="filter-btn f-nuclei"  onclick="filter('nuclei',this)">Nuclei</button>
+    <button class="filter-btn f-headers" onclick="filter('headers',this)">Cabeceras</button>
+  </div>
+
+  <div id="sections"></div>
+
+  <div class="flow-box">
+    <div class="flow-title">// FLUJO RECOMENDADO EN INDUSTRIA</div>
+    <div class="flow-steps">
+      <span class="flow-step" style="color:var(--green)">nmap</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step" style="color:var(--blue)">whatweb</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step" style="color:var(--amber)">ffuf</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step" style="color:var(--red)">nuclei</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step" style="color:var(--purple)">reporte</span>
+    </div>
+  </div>
+
+  <footer>
+    <span class="footer-left">// bryan_devsec · hacking cheatsheet · 2026</span>
+    <span class="footer-right">solo targets autorizados ⚠️</span>
+  </footer>
+
+</div>
+
+<script>
+const data = [
+  {
+    id: 'nmap', label: '🔍 nmap — reconocimiento de red', bar: 'bar-nmap', tl: 'tl-nmap', tool: 'NMAP',
+    cmds: [
+      { cmd: 'nmap -sV -p 80,443,8080,8443 dominio.com', desc: 'Versiones en puertos web comunes' },
+      { cmd: 'nmap -sS -sV -O -p- --open dominio.com', desc: 'Full scan: todos los puertos + OS + versiones' },
+      { cmd: 'nmap -sV -p 80,443 --script=http-title,http-headers,http-waf-detect dominio.com', desc: 'Título, headers y detección de WAF' },
+      { cmd: 'nmap -p 80,443 --script=http-enum,http-generator,http-robots.txt dominio.com', desc: 'Enumera rutas, CMS y robots.txt' },
+      { cmd: 'nmap --script=ssl-cert,ssl-enum-ciphers,ssl-heartbleed -p 443 dominio.com', desc: 'Audita SSL: ciphers débiles, Heartbleed' },
+      { cmd: 'nmap -sV --script=vuln -p 80,443 dominio.com', desc: 'Scan rápido de vulns conocidas' },
+      { cmd: 'nmap -sS -T2 -f --spoof-mac 0 -p 80,443 dominio.com', desc: 'Sigiloso: SYN + lento + MAC aleatoria' },
+      { cmd: 'nmap -sV -oA reporte dominio.com', desc: 'Guardar en los 3 formatos (.txt, .xml, .gnmap)' },
+    ]
+  },
+  {
+    id: 'whatweb', label: '🔎 WhatWeb — fingerprint tecnologías', bar: 'bar-whatweb', tl: 'tl-whatweb', tool: 'WHATWEB',
+    cmds: [
+      { cmd: 'whatweb dominio.com', desc: 'Escaneo básico: CMS, servidor, frameworks' },
+      { cmd: 'whatweb -v dominio.com', desc: 'Verbose: detalle completo de cada plugin' },
+      { cmd: 'whatweb -a 3 dominio.com', desc: 'Agresividad máxima: más requests, más info' },
+      { cmd: 'whatweb -a 1 dominio.com', desc: 'Silencioso: un solo request al target' },
+      { cmd: 'whatweb --log-json=resultado.json dominio.com', desc: 'Guardar output en JSON para reportar' },
+      { cmd: 'whatweb -i lista.txt --log-brief=out.txt', desc: 'Múltiples targets desde archivo' },
+    ]
+  },
+  {
+    id: 'ffuf', label: '💥 ffuf — fuzzing de rutas y parámetros', bar: 'bar-ffuf', tl: 'tl-ffuf', tool: 'FFUF',
+    cmds: [
+      { cmd: 'ffuf -u https://dominio.com/FUZZ -w common.txt', desc: 'Fuzzing básico de directorios' },
+      { cmd: 'ffuf -u https://dominio.com/FUZZ -w common.txt -fc 404', desc: 'Filtrar 404 — solo lo interesante' },
+      { cmd: 'ffuf -u https://dominio.com/FUZZ -w common.txt -mc 200,301,302,403', desc: 'Mostrar solo códigos relevantes' },
+      { cmd: 'ffuf -u https://dominio.com/FUZZ -w common.txt -e .php,.html,.js,.txt', desc: 'Fuzzing con extensiones de archivo' },
+      { cmd: 'ffuf -u https://dominio.com/FUZZ -w big.txt -t 50 -rate 100', desc: 'Control de hilos y rate (evitar WAF)' },
+      { cmd: 'ffuf -u https://dominio.com/?id=FUZZ -w numbers.txt -fs 1024', desc: 'Fuzzing de parámetros GET por tamaño' },
+      { cmd: 'ffuf -u https://dominio.com/FUZZ -w common.txt -o res.json -of json', desc: 'Guardar resultados en JSON' },
+    ]
+  },
+  {
+    id: 'nuclei', label: '☢️ Nuclei — scanner de vulnerabilidades', bar: 'bar-nuclei', tl: 'tl-nuclei', tool: 'NUCLEI',
+    cmds: [
+      { cmd: 'nuclei -update-templates', desc: 'Actualizar templates (hacer SIEMPRE primero)' },
+      { cmd: 'nuclei -u https://dominio.com', desc: 'Scan básico con templates por defecto' },
+      { cmd: 'nuclei -u https://dominio.com -t exposures/', desc: 'Archivos expuestos: .env, backups, configs' },
+      { cmd: 'nuclei -u https://dominio.com -t cves/', desc: 'CVEs específicos en el target' },
+      { cmd: 'nuclei -u https://dominio.com -t misconfiguration/', desc: 'Malas configs: CORS, CSRF, headers...' },
+      { cmd: 'nuclei -u https://dominio.com -severity critical,high', desc: 'Solo críticos y altos (ideal bug bounty)' },
+      { cmd: 'nuclei -l targets.txt -severity high,critical -o reporte.txt', desc: 'Múltiples targets, output a archivo' },
+      { cmd: 'nuclei -u https://dominio.com -rl 10 -c 5', desc: 'Rate limit: 10 req/s, 5 concurrentes (sigilo)' },
+    ]
+  },
+  {
+    id: 'headers', label: '🪪 Cabeceras personalizadas — bryan_devsec', bar: 'bar-headers', tl: 'tl-headers', tool: 'HEADERS',
+    cmds: [
+      { cmd: 'X-Bug-Hunter: bryan_devsec', desc: 'Header de identificación como hunter' },
+      { cmd: 'User-Agent: bryan_devsec/BugBounty-Research', desc: 'User-Agent personalizado para tus scans' },
+      { cmd: 'X-Forwarded-For: 127.0.0.1', desc: 'Simula origen local, bypass algunas restricciones' },
+      { cmd: 'ffuf -u https://dominio.com/FUZZ -w common.txt \\\n  -H "X-Bug-Hunter: bryan_devsec" \\\n  -H "User-Agent: bryan_devsec/Research"', desc: 'ffuf con tus headers personalizados' },
+      { cmd: 'nuclei -u https://dominio.com \\\n  -H "X-Bug-Hunter: bryan_devsec" \\\n  -severity high,critical', desc: 'Nuclei con header de identificación' },
+    ]
+  },
+];
+
+function render(f='all') {
+  const cont = document.getElementById('sections');
+  cont.innerHTML = '';
+  data.filter(s => f==='all' || s.id===f).forEach(sec => {
+    const div = document.createElement('div');
+    div.className = 'section';
+    div.innerHTML = `
+      <div class="section-bar ${sec.bar}"></div>
+      <div class="section-header">
+        ${sec.label}
+        <span class="tool-label ${sec.tl}">${sec.tool}</span>
+      </div>
+      ${sec.cmds.map(c => `
+        <div class="cmd-row">
+          <code class="cmd">${c.cmd}</code>
+          <span class="desc">${c.desc}</span>
+          <button class="copy-btn" onclick="doCopy(this,\`${c.cmd.replace(/`/g,'\\`')}\`)">copiar</button>
+        </div>`).join('')}`;
+    cont.appendChild(div);
+  });
+}
+
+function filter(id, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => { b.classList.remove('active'); });
+  btn.classList.add('active');
+  render(id);
+}
+
+function doCopy(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ ok';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copiar'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
